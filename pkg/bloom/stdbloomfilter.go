@@ -22,7 +22,7 @@ type StandardBloomFilter struct {
 // Get size of the bit array based on the desired number of elements
 // and the desired false positive rate. We use the approximation for the FPR
 // to calculate the size of the bit array.
-func getBitArraySize(N int, P float64) (int, error) {
+func GetBitArraySize(N int, P float64) (int, error) {
 	if N < 0 || (P <= 0 || P > 1) {
 		return -1, errors.New("argument error while getting bit arr size, check N and P values")
 	}
@@ -33,7 +33,7 @@ func getBitArraySize(N int, P float64) (int, error) {
 
 // Get the number of hash functions based on the size of the Bloom filter and
 // the bit array size. Use the same exponential relationship to derive this
-func getNumHashFunctions(N int, M int) (int, error) {
+func GetNumHashFunctions(N int, M int) (int, error) {
 	if N <= 0 {
 		return -1, errors.New("invalid size argument while creating bloom filter")
 	}
@@ -44,16 +44,16 @@ func getNumHashFunctions(N int, M int) (int, error) {
 }
 
 func NewStandardBloomFilter(N int, P float64) (*StandardBloomFilter, error) {
-	if N < 0 {
+	if N <= 0 {
 		return nil, errors.New("invalid size argument while creating bloom filter")
 	}
 
-	M, err := getBitArraySize(N, P)
+	M, err := GetBitArraySize(N, P)
 	if err != nil {
 		return nil, err
 	}
 
-	K, err := getNumHashFunctions(N, M)
+	K, err := GetNumHashFunctions(N, M)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func NewStandardBloomFilter(N int, P float64) (*StandardBloomFilter, error) {
 	}, nil
 }
 
-func (b *StandardBloomFilter) getHashIndex(value string, idx int) uint64 {
+func (b *StandardBloomFilter) GetHashIndex(value string, idx int) uint64 {
 	numBytes := make([]byte, 4)
 	binary.LittleEndian.PutUint32(numBytes, uint32(idx))
 
@@ -93,7 +93,7 @@ func (b *StandardBloomFilter) Add(ele interface{}) error {
 
 	for i := 0; i < b.K; i++ {
 		// Convert index to bytes so that it can be used as input to Hash
-		hashIndex := b.getHashIndex(strRepr, i)
+		hashIndex := b.GetHashIndex(strRepr, i)
 		b.Arr[hashIndex] = true
 	}
 	b.size++
@@ -107,7 +107,7 @@ func (b *StandardBloomFilter) Contains(ele interface{}) bool {
 	for i := 0; i < b.K; i++ {
 		// Convert index to bytes so that it can be
 		// used to check the bit array index
-		hashIndex := b.getHashIndex(strRepr, i)
+		hashIndex := b.GetHashIndex(strRepr, i)
 		contains = contains && b.Arr[hashIndex]
 	}
 	return contains
