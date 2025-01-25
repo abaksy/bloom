@@ -228,9 +228,7 @@ func TestStandardBloomFilter_GetHashIndex(t *testing.T) {
 		b    *StandardBloomFilter
 		args args
 		want uint64
-	}{
-		// TODO: Add test cases.
-	}
+	}{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.b.GetHashIndex(tt.args.value, tt.args.idx); got != tt.want {
@@ -241,60 +239,79 @@ func TestStandardBloomFilter_GetHashIndex(t *testing.T) {
 }
 
 func TestStandardBloomFilter_Add(t *testing.T) {
-	type args struct {
-		ele interface{}
-	}
+	bf, _ := NewStandardBloomFilter(100, 0.01)
+
 	tests := []struct {
-		name    string
-		b       *StandardBloomFilter
-		args    args
-		wantErr bool
+		name  string
+		value interface{}
 	}{
-		// TODO: Add test cases.
+		{"string value", "test"},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.b.Add(tt.args.ele); (err != nil) != tt.wantErr {
-				t.Errorf("StandardBloomFilter.Add() error = %v, wantErr %v", err, tt.wantErr)
+			err := bf.Add(tt.value)
+			if err != nil {
+				t.Errorf("Add(%v) returned unexpected error: %v", tt.value, err)
+			}
+			if !bf.Contains(tt.value) {
+				t.Errorf("Add(%v) succeeded but Contains(%v) returned false", tt.value, tt.value)
 			}
 		})
 	}
+
 }
 
-func TestStandardBloomFilter_Contains(t *testing.T) {
-	type args struct {
-		ele interface{}
+func TestContains(t *testing.T) {
+	bf, _ := NewStandardBloomFilter(100, 0.01)
+
+	// Add some items
+	items := []string{"apple", "banana", "orange"}
+	for _, item := range items {
+		bf.Add(item)
 	}
-	tests := []struct {
-		name string
-		b    *StandardBloomFilter
-		args args
-		want bool
-	}{
-		// TODO: Add test cases.
+
+	// Test for added items
+	for _, item := range items {
+		if !bf.Contains(item) {
+			t.Errorf("Contains(%s) = false, expected true", item)
+		}
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.b.Contains(tt.args.ele); got != tt.want {
-				t.Errorf("StandardBloomFilter.Contains() = %v, want %v", got, tt.want)
-			}
-		})
+
+	// Test for non-added items
+	nonItems := []string{"grape", "mango", "pear"}
+	falsePositives := 0
+	for _, item := range nonItems {
+		if bf.Contains(item) {
+			falsePositives++
+		}
 	}
+
+	// Log false positive rate for manual verification
+	t.Logf("False positive rate: %f", float64(falsePositives)/float64(len(nonItems)))
 }
 
-func TestStandardBloomFilter_Clear(t *testing.T) {
-	tests := []struct {
-		name    string
-		b       *StandardBloomFilter
-		wantErr bool
-	}{
-		// TODO: Add test cases.
+func TestClear(t *testing.T) {
+	bf, _ := NewStandardBloomFilter(100, 0.01)
+
+	// Add some items
+	items := []string{"test1", "test2", "test3"}
+	for _, item := range items {
+		bf.Add(item)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.b.Clear(); (err != nil) != tt.wantErr {
-				t.Errorf("StandardBloomFilter.Clear() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
+
+	// Clear the filter
+	bf.Clear()
+
+	// Verify size is reset
+	if bf.size != 0 {
+		t.Errorf("Expected size 0 after Clear(), got %d", bf.size)
+	}
+
+	// Verify items are no longer present
+	for _, item := range items {
+		if bf.Contains(item) {
+			t.Errorf("Contains(%s) = true after Clear(), expected false", item)
+		}
 	}
 }
